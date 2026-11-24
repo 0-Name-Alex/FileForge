@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FileForge.App/FileForge.App.csproj" />
+    <Project Path="src/FileForge.Cli/FileForge.Cli.csproj" />
+    <Project Path="src/FileForge.Core/FileForge.Core.csproj" />
+    <Project Path="src/FileForge.Platform.Windows/FileForge.Platform.Windows.csproj" />
+  </Folder>
+</Solution>

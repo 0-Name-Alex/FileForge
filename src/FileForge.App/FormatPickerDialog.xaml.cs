@@ -54,6 +54,7 @@ public partial class FormatPickerDialog : Window
     ];
 
     private readonly List<FormatDisplayItem> _sourceList;
+    private readonly bool _isInitialized;
     public ObservableCollection<FormatDisplayItem> FilteredFormats { get; } = [];
     public string? SelectedFormat { get; private set; }
 
@@ -81,6 +82,7 @@ public partial class FormatPickerDialog : Window
         }
 
         FormatsList.ItemsSource = FilteredFormats;
+        _isInitialized = true;
         ApplyFilter();
 
         if (!string.IsNullOrEmpty(initialSelection))
@@ -102,16 +104,19 @@ public partial class FormatPickerDialog : Window
 
     private string GetActiveCategory()
     {
-        if (CatDocs.IsChecked == true) return "Docs";
-        if (CatImages.IsChecked == true) return "Images";
-        if (CatData.IsChecked == true) return "Data";
-        if (CatArchives.IsChecked == true) return "Archives";
-        if (CatDev.IsChecked == true) return "Dev";
+        if (CatDocs?.IsChecked == true) return "Docs";
+        if (CatImages?.IsChecked == true) return "Images";
+        if (CatData?.IsChecked == true) return "Data";
+        if (CatArchives?.IsChecked == true) return "Archives";
+        if (CatDev?.IsChecked == true) return "Dev";
         return "All";
     }
 
     private void ApplyFilter()
     {
+        if (!_isInitialized || SearchBox == null || SearchPlaceholder == null || FormatsList == null)
+            return;
+
         var query = SearchBox.Text.Trim();
         SearchPlaceholder.Visibility = string.IsNullOrEmpty(query) ? Visibility.Visible : Visibility.Hidden;
 

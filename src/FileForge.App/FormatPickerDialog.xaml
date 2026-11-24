@@ -56,12 +56,12 @@
       <!-- ── CATEGORY FILTER CHIPS ── -->
       <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="2,0,2,10">
         <StackPanel Orientation="Horizontal">
-          <RadioButton x:Name="CatAll" Content="All Formats" IsChecked="True" Checked="OnCategoryChanged" Margin="0,0,6,0" Style="{StaticResource CategoryChip}" />
-          <RadioButton x:Name="CatDocs" Content="Documents &amp; Slides" Checked="OnCategoryChanged" Margin="0,0,6,0" Style="{StaticResource CategoryChip}" />
-          <RadioButton x:Name="CatImages" Content="Images" Checked="OnCategoryChanged" Margin="0,0,6,0" Style="{StaticResource CategoryChip}" />
-          <RadioButton x:Name="CatData" Content="Data &amp; Sheets" Checked="OnCategoryChanged" Margin="0,0,6,0" Style="{StaticResource CategoryChip}" />
-          <RadioButton x:Name="CatArchives" Content="Archives" Checked="OnCategoryChanged" Margin="0,0,6,0" Style="{StaticResource CategoryChip}" />
-          <RadioButton x:Name="CatDev" Content="Developer &amp; Hashes" Checked="OnCategoryChanged" Margin="0,0,0,0" Style="{StaticResource CategoryChip}" />
+          <RadioButton x:Name="CatAll" GroupName="FormatCategory" Content="All Formats" IsChecked="True" Checked="OnCategoryChanged" Margin="0,0,6,0" Style="{StaticResource CategoryChip}" />
+          <RadioButton x:Name="CatDocs" GroupName="FormatCategory" Content="Documents &amp; Slides" Checked="OnCategoryChanged" Margin="0,0,6,0" Style="{StaticResource CategoryChip}" />
+          <RadioButton x:Name="CatImages" GroupName="FormatCategory" Content="Images" Checked="OnCategoryChanged" Margin="0,0,6,0" Style="{StaticResource CategoryChip}" />
+          <RadioButton x:Name="CatData" GroupName="FormatCategory" Content="Data &amp; Sheets" Checked="OnCategoryChanged" Margin="0,0,6,0" Style="{StaticResource CategoryChip}" />
+          <RadioButton x:Name="CatArchives" GroupName="FormatCategory" Content="Archives" Checked="OnCategoryChanged" Margin="0,0,6,0" Style="{StaticResource CategoryChip}" />
+          <RadioButton x:Name="CatDev" GroupName="FormatCategory" Content="Developer &amp; Hashes" Checked="OnCategoryChanged" Margin="0,0,0,0" Style="{StaticResource CategoryChip}" />
         </StackPanel>
       </ScrollViewer>
 

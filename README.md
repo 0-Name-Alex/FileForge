@@ -1,106 +1,115 @@
-# 🔄 FileForge — Universal File Converter & Editor
-> **High-Performance Multi-File Conversion Engine with Global Hotkey Access & Low-Memory Governor**  
-> **Target**: .NET 10 (`dotnet 10.0.404`) • C# 14 • Python 3.14 • Windows 11 (x64)
+# 🔄 FileForge
+> **Ultra-Fast, Low-Memory Universal File Converter & Format Editor for Windows**  
+> *Targeted for .NET 10 • C# 14 • Python 3.14 • Windows 11 Fluent Design*
+
+[![OS - Windows 11](https://img.shields.io/badge/OS-Windows%2011%20x64-0078D4?logo=windows)](https://microsoft.com)
+[![Runtime - .NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![Language - C# 14](https://img.shields.io/badge/Language-C%23%2014-239120?logo=csharp)](https://docs.microsoft.com/dotnet/csharp/)
+[![Python - 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python)](https://python.org)
+[![Author - 0-Name-Alex](https://img.shields.io/badge/Author-0--Name--Alex-orange?logo=github)](https://github.com/0-Name-Alex)
 
 ---
 
-## 🎯 Architecture & Features Overview
+## ⚡ Highlights & Key Capabilities
 
-`FileForge` is engineered with clean separation between the high-performance conversion core, Windows platform hooks, and presentation layers:
-
-- **⚡ Multi-File Batch Queue**: Parallel bounded worker channels (`System.Threading.Channels`) processing multi-file queues concurrently with per-item and aggregated progress broadcasting.
-- **🔍 Magic-Bytes Format Detection**: Detects real file types by header bytes (even when extensions are missing or altered).
-- **🌱 Ultra-Low Memory Governor**: Idle RAM trimmed to **~1.2–25 MB** using Win32 `SetProcessWorkingSetSize` and stream chunking.
-- **⌨️ Global Hotkey & System Tray**: `Ctrl+Alt+F` global shortcut powered by `RegisterHotKey` on an invisible message window, plus system tray minimization.
-- **🔌 Multi-Engine Transcoding**:
-  - **Native C# (.NET 10)**: Bidirectional JSON <-> XML <-> CSV, ZIP/TAR/GZ streaming archives, Base64, Hex dumps, SHA-256 / MD5 hashes.
-  - **Python 3.14 Bridge**: Pre-installed Pillow (PNG, JPG, WEBP, BMP, ICO, PDF), OpenPyXL (Excel), Docx, and PDFium/PDFplumber.
+- **📁 High-Throughput Batch Processing**: Queue dozens or hundreds of files and entire directories at once. Uses parallel bounded worker channels (`System.Threading.Channels`) for non-blocking concurrent conversions.
+- **🔍 Magic-Byte Format Identification**: Inspects file header signatures (magic bytes) to detect genuine file types even if extensions are missing, scrambled, or altered.
+- **📑 Full PowerPoint Support**: Transcode `.pptx`, `.ppt`, and `.ppsx` presentations into high-fidelity vector `.pdf`, `.docx`, `.html`, or extract full slide notes and text into `.txt` and `.md`.
+- **🔎 Searchable Format Browser**: Instant search and category chips (`[Documents & Slides]`, `[Images]`, `[Data & Sheets]`, `[Archives]`, `[Developer & Hashes]`) to find and assign output formats in seconds.
+- **⌨️ Instant Global Hotkey (`Ctrl + Alt + F`)**: Summon a minimalist floating quick-drop target from anywhere in Windows to convert files without having the main window open.
+- **🌱 Ultra-Low Memory Governor (< 1.5–25 MB)**: Integrated Win32 `SetProcessWorkingSetSize` optimizer and stream chunking automatically trims memory after batch runs and when minimized to the notification tray.
+- **🎨 Windows 11 Fluent UI**: Clean dark/light adaptive aesthetics matching the TaskHub design language, using `Segoe Fluent Icons`, card containers, and rounded corners.
 
 ---
 
-## 📂 Project Structure
+## 🔄 Supported Format Conversion Matrix
+
+| Category | Input Formats | Target Output Formats | Processing Engine |
+|---|---|---|---|
+| **📄 Presentations** | `PPTX`, `PPT`, `PPSX` | `PDF`, `TXT`, `DOCX`, `HTML`, `MD` | PowerPoint Headless COM / `python-pptx` |
+| **🖼️ Images** | `PNG`, `JPG`, `WEBP`, `BMP`, `ICO`, `TIFF`, `GIF` | `PNG`, `JPG`, `WEBP`, `BMP`, `ICO`, `PDF`, `TIFF` | Pillow / Native Stream Engine |
+| **📑 Documents & Text**| `DOCX`, `PDF`, `TXT`, `MD`, `HTML` | `PDF`, `DOCX`, `TXT`, `MD`, `HTML` | `pdfplumber`, `pypdfium2`, `python-docx` |
+| **📊 Spreadsheets** | `CSV`, `XLSX`, `TSV` | `CSV`, `XLSX`, `JSON`, `HTML Table` | `openpyxl` / Native Delimiter Engine |
+| **💻 Data & Config** | `JSON`, `XML`, `YAML`, `CSV` | `JSON`, `XML`, `YAML`, `CSV`, `TXT` | Native .NET 10 System.Text.Json / LINQ to XML |
+| **📦 Archives** | `ZIP`, `TAR`, `GZ`, Folders | `ZIP`, `TAR`, `GZ`, Unpacked Folder | Native System.IO.Compression / TarFile |
+| **🔒 Developer / Hashes**| Any File, `Base64`, `Hex`, `Text` | `Base64`, `Hex`, `SHA-256`, `MD5` | Native System.Security.Cryptography |
+
+---
+
+## ⌨️ Shortcut Reference
+
+| Shortcut | Scope | Action |
+|---|---|---|
+| `Ctrl + Alt + F` | **System-Wide (Global)** | Toggle floating quick-drop converter overlay |
+| `Ctrl + O` | Application | Open file picker to add multiple files |
+| `Ctrl + D` | Application | Open folder picker to add directory of files |
+| `Esc` | Dialogs / Overlays | Dismiss search format picker or quick launcher |
+| `Enter` | Format Picker | Confirm and apply selected format |
+
+---
+
+## 📂 Architecture Overview
 
 ```
-D:\Projects\File editor\
-├── FileForge.slnx                    # Modern .NET 10 solution
-│
-├── src\
-│   ├── FileForge.Core\               # Core conversion library
-│   │   ├── Models\                   # ConversionItem, Options, Result, FileTypeInfo
-│   │   ├── Detection\                # FormatDetector (magic-bytes & signatures)
-│   │   ├── Converters\               # Data, Archive, Dev & PythonBridge converters
-│   │   ├── Registry\                 # ConverterRegistry (dynamic routing)
-│   │   └── Pipeline\                 # BatchPipeline (parallel channel execution)
+FileForge/
+├── src/
+│   ├── FileForge.Core/                 # Pure conversion contracts, stream pipelines
+│   │   ├── Detection/FormatDetector.cs # File signatures & magic-byte scanner
+│   │   ├── Converters/                 # Data, Archive, Dev, Presentation & Python converters
+│   │   ├── Registry/ConverterRegistry  # Dynamic type discovery & routing
+│   │   └── Pipeline/BatchPipeline.cs   # Channel-based parallel worker engine
 │   │
-│   ├── FileForge.Platform.Windows\   # Windows Win32 integration
-│   │   ├── Hotkeys\                  # WindowsHotkeyService (Ctrl+Alt+F)
-│   │   ├── Memory\                   # MemoryOptimizer (SetProcessWorkingSetSize)
-│   │   └── Tray\                     # SystemTrayService (NotifyIcon & tray menu)
+│   ├── FileForge.Platform.Windows/     # Reusable Win32 interop
+│   │   ├── Hotkeys/WindowsHotkeyService# Win32 RegisterHotKey via HWND_MESSAGE
+│   │   ├── Memory/MemoryOptimizer.cs   # SetProcessWorkingSetSize & GC compacting
+│   │   └── Tray/SystemTrayService.cs   # Notification area icon & context menu
 │   │
-│   ├── FileForge.Adapters.Python\    # Isolated Python workers
-│   │   └── converter_cli.py          # Pillow, Docx, PDF, OpenPyXL worker
+│   ├── FileForge.Adapters.Python/      # Lightweight on-demand Python CLI bridges
+│   │   └── converter_cli.py            # Pillow, Docx, PDF, PPTX, OpenPyXL worker
 │   │
-│   ├── FileForge.Cli\                # Headless batch test suite & verification harness
+│   ├── FileForge.Cli/                  # Automated verification test suite
 │   │   └── Program.cs
 │   │
-│   └── FileForge.App\                # WPF Desktop Application Shell (.NET 10)
-│       ├── ViewModels\               # Clean MVVM layer for Claude or any UI framework
-│       │   ├── MainViewModel.cs      # Batch queue, commands, memory & progress
-│       │   ├── ConversionItemViewModel.cs # Per-row target dropdown, status, explorer
-│       │   ├── QuickLauncherViewModel.cs  # Floating drop target (Ctrl+Alt+F)
-│       │   └── ObservableObject.cs   # INotifyPropertyChanged & RelayCommand
-│       ├── MainWindow.xaml / .cs     # Main UI window
-│       └── App.xaml / .cs            # Application entry & tray lifecycle
+│   └── FileForge.App/                  # Modern WPF Application (.NET 10)
+│       ├── MainWindow.xaml             # Fluent batch queue interface
+│       ├── QuickLauncherWindow.xaml    # Floating drop overlay (Ctrl+Alt+F)
+│       ├── FormatPickerDialog.xaml     # Searchable format selector modal
+│       └── ViewModels/                 # Decoupled MVVM bindings & commands
 │
-├── OUTLOOK.md                        # Complete design blueprint
-└── README.md                         # This guide
+├── publish/                            # Standalone compiled release binaries
+├── build.cmd                           # Release build script
+├── run.cmd                             # Quick launch helper
+└── publish_to_github.cmd               # One-click GitHub repository creator
 ```
 
 ---
 
-## 🧪 Testing & Verifying the Base Engine
+## 🚀 Quick Start & Build
 
-You can run the automated verification suite anytime:
-
+### 1. Run the Application
+Double click **`run.cmd`** or launch via terminal:
 ```powershell
-cd "D:\Projects\File editor"
+dotnet run --project src/FileForge.App/FileForge.App.csproj
+```
+
+### 2. Run the Verification Suite
+Execute the headless test harness that verifies multi-file conversions, channels, and memory trimming:
+```powershell
 dotnet run --project src/FileForge.Cli/FileForge.Cli.csproj
 ```
 
-**Verified Test Output**:
+### 3. Build Release Package
+```powershell
+build.cmd
 ```
-🏁 Batch conversion finished in 775 ms!
-Results: 9 Succeeded, 0 Failed.
-🧠 Memory before trimming: 36.8 MB
-🌱 Memory after MemoryOptimizer.TrimWorkingSet(): 1.2 MB (Reduced by 35.6 MB!)
-```
+Stand-alone binaries will be compiled to `publish\FileForge.App.exe`.
+
+### 4. Publish to GitHub
+Run **`publish_to_github.cmd`** to automatically create `0-Name-Alex/FileForge` on GitHub and push the repository.
 
 ---
 
-## 🎨 Information for Claude / UI Designer
-
-The MVVM backend is completely ready for you to wire up in `src/FileForge.App`:
-
-1. **`MainViewModel`** (`DataContext = new MainViewModel()`):
-   - `QueueItems` (`ObservableCollection<ConversionItemViewModel>`): Bind to your DataGrid / ListView.
-   - `AddFilesCommand` / `AddFolderCommand`: Bind to file picker buttons.
-   - `ConvertAllCommand`: Bind to the primary "Convert All" action button.
-   - `CancelCommand`: Bind to cancel button (`IsEnabled="{Binding IsBusy}"`).
-   - `ApplyTargetToAllCommand` / `ApplyTargetToSelectedCommand`: Bind to batch target selector dropdown (`CommonTargetFormat`).
-   - `OverallProgress` (`double` 0-100): Bind to the ProgressBar.
-   - `StatusText`: Bind to status bar.
-   - `CurrentMemoryMb`: Bind to RAM monitor badge.
-   - `TrimMemoryCommand`: Bind to clean memory button.
-
-2. **`ConversionItemViewModel`** (Each row in the queue):
-   - `FileName`, `DetectedFormat`, `FormattedSize`
-   - `AvailableTargetFormats`: Bind to row `ComboBox` `ItemsSource`.
-   - `TargetFormat`: Bind two-way to row `ComboBox` `SelectedItem`.
-   - `Progress`: Bind to row `ProgressBar` (0-100).
-   - `Status`: `Queued`, `Processing`, `Completed`, `Failed`.
-   - `StatusMessage`: Bind to row status text.
-   - `OpenOutputFolderCommand`: Bind to "Show in Folder" button.
-
-3. **`QuickLauncherViewModel`**:
-   - For a borderless floating overlay (`Ctrl+Alt+F`).
-   - Drag-and-drop onto the overlay calls `ConvertQuickFilesAsync(files)`.
+## 👤 Author
+**Dhayananth J (`0-Name-Alex`)**  
+- Portfolio: [dhayananth.me](https://dhayananth.me)  
+- GitHub: [@0-Name-Alex](https://github.com/0-Name-Alex)

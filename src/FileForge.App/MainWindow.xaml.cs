@@ -42,4 +42,37 @@ public partial class MainWindow : Window
             vm.AddFilesCommand.Execute(null);
         }
     }
+
+    private void OnOpenBatchFormatPickerClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            var dialog = new FormatPickerDialog(initialSelection: vm.CommonTargetFormat)
+            {
+                Owner = this
+            };
+
+            if (dialog.ShowDialog() == true && !string.IsNullOrEmpty(dialog.SelectedFormat))
+            {
+                vm.CommonTargetFormat = dialog.SelectedFormat;
+                vm.ApplyTargetToAllCommand.Execute(null);
+            }
+        }
+    }
+
+    private void OnOpenRowFormatPickerClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement elem && elem.DataContext is ConversionItemViewModel itemVm)
+        {
+            var dialog = new FormatPickerDialog(itemVm.AvailableTargetFormats, itemVm.TargetFormat)
+            {
+                Owner = this
+            };
+
+            if (dialog.ShowDialog() == true && !string.IsNullOrEmpty(dialog.SelectedFormat))
+            {
+                itemVm.TargetFormat = dialog.SelectedFormat;
+            }
+        }
+    }
 }

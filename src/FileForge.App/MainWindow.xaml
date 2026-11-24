@@ -123,7 +123,11 @@
           <TextBlock Text="Set all to:" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,6,0" />
           <ComboBox ItemsSource="{Binding CommonTargetPresets}"
                     SelectedItem="{Binding CommonTargetFormat}"
-                    Width="80" VerticalAlignment="Center" />
+                    IsEditable="True" IsTextSearchEnabled="True"
+                    Width="85" VerticalAlignment="Center" />
+          <Button Style="{StaticResource IconBtn}" Click="OnOpenBatchFormatPickerClick" ToolTip="Search and browse all output formats" Margin="4,0,0,0">
+            <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFont}" FontSize="12" />
+          </Button>
           <Button Style="{StaticResource SubtleBtn}" Command="{Binding ApplyTargetToAllCommand}"
                   Margin="6,0,0,0" ToolTip="Apply to all items in queue">
             <TextBlock Text="Apply" FontSize="12" />
@@ -171,10 +175,16 @@
                 <TextBlock Grid.Column="1" Text="&#xE72A;" FontFamily="{StaticResource IconFont}" FontSize="12"
                            VerticalAlignment="Center" Opacity="0.4" Margin="0,0,10,0" />
 
-                <!-- Target format dropdown -->
-                <ComboBox Grid.Column="2" Width="80" VerticalAlignment="Center" Margin="0,0,12,0"
-                          ItemsSource="{Binding AvailableTargetFormats}"
-                          SelectedItem="{Binding TargetFormat, Mode=TwoWay}" />
+                <!-- Target format dropdown with search button -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                  <ComboBox Width="80" VerticalAlignment="Center"
+                            IsEditable="True" IsTextSearchEnabled="True"
+                            ItemsSource="{Binding AvailableTargetFormats}"
+                            SelectedItem="{Binding TargetFormat, Mode=TwoWay}" />
+                  <Button Style="{StaticResource IconBtn}" Click="OnOpenRowFormatPickerClick" ToolTip="Search and browse formats" Margin="2,0,0,0">
+                    <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFont}" FontSize="11" />
+                  </Button>
+                </StackPanel>
 
                 <!-- Status / progress -->
                 <Border Grid.Column="3" Width="100" VerticalAlignment="Center" Margin="0,0,6,0">

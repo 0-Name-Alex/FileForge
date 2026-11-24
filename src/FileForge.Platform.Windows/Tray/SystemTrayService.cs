@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using FileForge.Platform.Windows.Memory;
 
@@ -15,10 +16,30 @@ public sealed class SystemTrayService : IDisposable
 
     public SystemTrayService()
     {
+        Icon icon = SystemIcons.Application;
+        try
+        {
+            var candidates = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "assets", "app_icon.ico"),
+                Path.Combine(AppContext.BaseDirectory, "app_icon.ico"),
+                @"D:\Projects\File editor\assets\app_icon.ico"
+            };
+            foreach (var c in candidates)
+            {
+                if (File.Exists(c))
+                {
+                    icon = new Icon(c);
+                    break;
+                }
+            }
+        }
+        catch { }
+
         _notifyIcon = new NotifyIcon
         {
             Text = "FileForge — Universal File Converter & Editor",
-            Icon = SystemIcons.Application,
+            Icon = icon,
             Visible = true
         };
 

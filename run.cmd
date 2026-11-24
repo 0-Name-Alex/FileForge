@@ -1,0 +1,3 @@
+@echo off
+echo Starting FileForge...
+start "" dotnet run --project "%~dp0src\FileForge.App\FileForge.App.csproj" -c Debug

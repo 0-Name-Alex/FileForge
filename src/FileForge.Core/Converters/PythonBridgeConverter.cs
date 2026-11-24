@@ -15,7 +15,7 @@ public sealed class PythonBridgeConverter : IFileConverter
     public FileCategory Category => FileCategory.Image;
 
     private static readonly HashSet<string> ImageExts = ["png", "jpg", "jpeg", "webp", "bmp", "ico", "tiff", "tif", "gif", "pdf"];
-    private static readonly HashSet<string> DocExts = ["docx", "pdf", "txt", "md", "html"];
+    private static readonly HashSet<string> DocExts = ["docx", "pdf", "txt", "md", "html", "pptx", "ppt", "ppsx"];
     private static readonly HashSet<string> ExcelExts = ["xlsx", "csv", "tsv", "json"];
 
     public IReadOnlyList<string> SupportedInputFormats =>

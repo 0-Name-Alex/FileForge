@@ -22,6 +22,9 @@ public static class FormatDetector
         ["pdf"] = new("pdf", "Portable Document Format", FileCategory.Document, "application/pdf"),
         ["docx"] = new("docx", "Microsoft Word Document", FileCategory.Document, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
         ["doc"] = new("doc", "Legacy Word Document", FileCategory.Document, "application/msword"),
+        ["pptx"] = new("pptx", "PowerPoint Presentation", FileCategory.Document, "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
+        ["ppt"] = new("ppt", "Legacy PowerPoint Presentation", FileCategory.Document, "application/vnd.ms-powerpoint"),
+        ["ppsx"] = new("ppsx", "PowerPoint SlideShow", FileCategory.Document, "application/vnd.openxmlformats-officedocument.presentationml.slideshow"),
         ["txt"] = new("txt", "Plain Text Document", FileCategory.Document, "text/plain"),
         ["md"] = new("md", "Markdown Document", FileCategory.Document, "text/markdown"),
         ["html"] = new("html", "HTML Document", FileCategory.Document, "text/html"),
@@ -113,7 +116,7 @@ public static class FormatDetector
             if (buffer[0] == 0x50 && buffer[1] == 0x4B && (buffer[2] == 0x03 || buffer[2] == 0x05 || buffer[2] == 0x07))
             {
                 var ext = Path.GetExtension(filePath).TrimStart('.').ToLowerInvariant();
-                if (ext is "docx" or "xlsx") return KnownExtensions[ext];
+                if (ext is "docx" or "xlsx" or "pptx" or "ppsx") return KnownExtensions[ext];
                 return KnownExtensions["zip"];
             }
         }
@@ -129,6 +132,11 @@ public static class FormatDetector
     public static IReadOnlyList<string> GetValidTargetFormats(string sourceExtension)
     {
         var ext = sourceExtension.TrimStart('.').ToLowerInvariant();
+        if (ext is "pptx" or "ppt" or "ppsx")
+        {
+            return ["pdf", "txt", "docx", "html", "md"];
+        }
+
         if (KnownExtensions.TryGetValue(ext, out var info))
         {
             return info.Category switch

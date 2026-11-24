@@ -112,11 +112,72 @@ def convert_excel(source: Path, target: Path):
 
     return False
 
+def convert_presentation(source: Path, target: Path):
+    source_ext = source.suffix.lower().lstrip('.')
+    target_ext = target.suffix.lower().lstrip('.')
+    target.parent.mkdir(parents=True, exist_ok=True)
+
+    # PPT / PPTX -> PDF via PowerPoint COM
+    if target_ext == 'pdf':
+        import subprocess
+        abs_src = str(source.resolve()).replace("'", "''")
+        abs_dst = str(target.resolve()).replace("'", "''")
+        ps_cmd = (
+            f"$src = '{abs_src}'; "
+            f"$dst = '{abs_dst}'; "
+            f"$ppt = New-Object -ComObject PowerPoint.Application; "
+            f"try {{ $p = $ppt.Presentations.Open($src, [Microsoft.Office.Core.MsoTriState]::msoTrue, [Microsoft.Office.Core.MsoTriState]::msoFalse, [Microsoft.Office.Core.MsoTriState]::msoFalse); $p.SaveAs($dst, 32); $p.Close() }} finally {{ $ppt.Quit() }}"
+        )
+        res = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps_cmd], capture_output=True, text=True)
+        return target.exists()
+
+    # PPTX -> TXT / MD / HTML text extraction
+    if source_ext in ('pptx', 'ppsx'):
+        from pptx import Presentation
+        prs = Presentation(source)
+        slides_text = []
+        for idx, slide in enumerate(prs.slides, 1):
+            slide_lines = [f"## Slide {idx}"]
+            for shape in slide.shapes:
+                if shape.has_text_frame:
+                    for paragraph in shape.text_frame.paragraphs:
+                        text = paragraph.text.strip()
+                        if text:
+                            slide_lines.append(text)
+            if slide.has_notes_slide and slide.notes_slide.notes_text_frame:
+                notes = slide.notes_slide.notes_text_frame.text.strip()
+                if notes:
+                    slide_lines.append(f"\n> Notes: {notes}")
+            slides_text.append("\n".join(slide_lines))
+
+        full_content = "\n\n---\n\n".join(slides_text)
+
+        if target_ext in ('txt', 'md'):
+            with open(target, 'w', encoding='utf-8') as f:
+                f.write(full_content)
+            return True
+        elif target_ext == 'html':
+            import html
+            cards = []
+            for s in slides_text:
+                esc = html.escape(s).replace("\n", "<br>")
+                cards.append(f"<div style='border:1px solid #ccc;padding:16px;margin:16px 0;border-radius:8px;'>{esc}</div>")
+            page = f"<!DOCTYPE html><html><head><meta charset='utf-8'><title>{source.stem}</title><style>body{{font-family:sans-serif;max-width:800px;margin:2rem auto;}}</style></head><body><h1>{source.stem}</h1>{''.join(cards)}</body></html>"
+            with open(target, 'w', encoding='utf-8') as f:
+                f.write(page)
+            return True
+
+    return False
+
 def convert_document(source: Path, target: Path):
     source_ext = source.suffix.lower().lstrip('.')
     target_ext = target.suffix.lower().lstrip('.')
     
     target.parent.mkdir(parents=True, exist_ok=True)
+
+    # PowerPoint handling
+    if source_ext in ('pptx', 'ppt', 'ppsx'):
+        return convert_presentation(source, target)
 
     # Word DOCX extraction
     if source_ext == 'docx':

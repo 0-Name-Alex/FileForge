@@ -65,11 +65,17 @@ var pngPath = Path.Combine(testDir, "sample_image.png");
 byte[] samplePngBytes = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
 await File.WriteAllBytesAsync(pngPath, samplePngBytes);
 
+// Sample 6: Generate a test PPTX presentation using python-pptx
+var pptxPath = Path.Combine(testDir, "sample_presentation.pptx");
+var createPptxCmd = $"from pptx import Presentation; prs = Presentation(); slide = prs.slides.add_slide(prs.slide_layouts[0]); slide.shapes.title.text = 'FileForge PowerPoint to PDF'; prs.save(r'{pptxPath}')";
+var pptxProc = Process.Start(new ProcessStartInfo("py", $"-3.14 -c \"{createPptxCmd}\"") { CreateNoWindow = true, UseShellExecute = false });
+await pptxProc!.WaitForExitAsync();
+
 Console.WriteLine("✅ Sample files generated.");
 
 // 2. Test Format Detection
 Console.WriteLine("\n🔍 Testing Magic-Bytes & Format Detection:");
-string[] samples = [csvPath, jsonPath, xmlPath, txtPath, pngPath];
+string[] samples = [csvPath, jsonPath, xmlPath, txtPath, pngPath, pptxPath];
 foreach (var s in samples)
 {
     var detected = FormatDetector.DetectFromFile(s);
@@ -144,6 +150,14 @@ var batchItems = new List<ConversionItem>
         SourceFormat = "png",
         TargetFormat = "pdf",
         DestinationPath = Path.Combine(outDir, "sample_image.pdf")
+    },
+    // PPTX -> PDF (via PresentationConverter / PowerPoint COM)
+    new()
+    {
+        SourcePath = pptxPath,
+        SourceFormat = "pptx",
+        TargetFormat = "pdf",
+        DestinationPath = Path.Combine(outDir, "sample_presentation.pdf")
     },
     // Folder -> ZIP Archive
     new()

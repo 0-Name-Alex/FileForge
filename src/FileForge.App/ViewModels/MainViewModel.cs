@@ -28,7 +28,7 @@ public sealed class MainViewModel : ObservableObject
     private int _failedItems;
 
     public ObservableCollection<ConversionItemViewModel> QueueItems { get; } = [];
-    public ObservableCollection<string> CommonTargetPresets { get; } = ["webp", "png", "jpg", "pdf", "docx", "xlsx", "csv", "json", "xml", "zip", "b64"];
+    public ObservableCollection<string> CommonTargetPresets { get; } = ["pdf", "webp", "png", "jpg", "docx", "xlsx", "csv", "json", "xml", "zip", "txt", "b64"];
 
     public string OutputDirectory
     {

@@ -14,6 +14,7 @@ public sealed class ConverterRegistry
         _converters.Add(new DataConverter());
         _converters.Add(new ArchiveConverter());
         _converters.Add(new DeveloperConverter());
+        _converters.Add(new PresentationConverter());
         _converters.Add(new PythonBridgeConverter());
     }
 

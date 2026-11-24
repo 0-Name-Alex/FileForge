@@ -2,6 +2,7 @@
 """
 FileForge Python Conversion Bridge
 Fast, lightweight, lazy-loaded worker for image, office, and document transcoding.
+Includes PDF Power Tools: Merge to Single PDF, Split to Pages / Images.
 Invoked on-demand and exits immediately to release memory.
 """
 
@@ -9,6 +10,7 @@ import sys
 import os
 import argparse
 import json
+import tempfile
 from pathlib import Path
 
 def convert_image(source: Path, target: Path, quality: int = 85, width: int = None, height: int = None):
@@ -169,6 +171,79 @@ def convert_presentation(source: Path, target: Path):
 
     return False
 
+def merge_to_pdf(input_paths: list[Path], output_path: Path):
+    from pypdf import PdfWriter
+    from PIL import Image
+
+    writer = PdfWriter()
+    temp_files = []
+
+    try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        for p in input_paths:
+            if not p.exists(): continue
+            ext = p.suffix.lower().lstrip('.')
+
+            # 1. Existing PDF file
+            if ext == 'pdf':
+                writer.append(str(p.resolve()))
+
+            # 2. Image files -> convert to temp PDF page
+            elif ext in ('png', 'jpg', 'jpeg', 'webp', 'bmp', 'tiff', 'tif'):
+                with Image.open(p) as img:
+                    if img.mode != 'RGB':
+                        img = img.convert('RGB')
+                    tf = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+                    temp_files.append(Path(tf.name))
+                    tf.close()
+                    img.save(tf.name)
+                    writer.append(tf.name)
+
+            # 3. PowerPoint files -> convert to temp PDF via COM
+            elif ext in ('pptx', 'ppt', 'ppsx'):
+                tf = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+                temp_files.append(Path(tf.name))
+                tf.close()
+                if convert_presentation(p, Path(tf.name)) and Path(tf.name).exists():
+                    writer.append(tf.name)
+
+        with open(output_path, 'wb') as f:
+            writer.write(f)
+        return output_path.exists()
+    finally:
+        for tf in temp_files:
+            try: tf.unlink(missing_ok=True)
+            except: pass
+
+def split_pdf(source_path: Path, output_dir: Path, out_format: str = 'pdf'):
+    output_dir.mkdir(parents=True, exist_ok=True)
+    stem = source_path.stem
+
+    if out_format == 'pdf':
+        from pypdf import PdfReader, PdfWriter
+        reader = PdfReader(str(source_path.resolve()))
+        for i, page in enumerate(reader.pages, 1):
+            writer = PdfWriter()
+            writer.add_page(page)
+            out_file = output_dir / f"{stem}_page_{i:03d}.pdf"
+            with open(out_file, 'wb') as f:
+                writer.write(f)
+        return True
+
+    elif out_format in ('png', 'jpg', 'jpeg', 'webp'):
+        import pypdfium2 as pdfium
+        pdf = pdfium.PdfDocument(str(source_path.resolve()))
+        ext = 'jpg' if out_format == 'jpeg' else out_format
+        for i, page in enumerate(pdf, 1):
+            image = page.render(scale=2).to_pil()
+            if ext == 'jpg' and image.mode != 'RGB':
+                image = image.convert('RGB')
+            out_file = output_dir / f"{stem}_page_{i:03d}.{ext}"
+            image.save(out_file)
+        return True
+
+    return False
+
 def convert_document(source: Path, target: Path):
     source_ext = source.suffix.lower().lstrip('.')
     target_ext = target.suffix.lower().lstrip('.')
@@ -245,13 +320,52 @@ def convert_document(source: Path, target: Path):
 
 def main():
     parser = argparse.ArgumentParser(description="FileForge Converter CLI")
-    parser.add_argument("--source", required=True, help="Input source file path")
-    parser.add_argument("--target", required=True, help="Output destination file path")
+    parser.add_argument("--source", help="Input source file path")
+    parser.add_argument("--target", help="Output destination file path")
+    parser.add_argument("--inputs", nargs="+", help="Multiple input files for batch merge")
+    parser.add_argument("--action", choices=["convert", "merge-pdf", "split-pdf"], default="convert", help="Action to perform")
+    parser.add_argument("--split-format", choices=["pdf", "png", "jpg", "webp"], default="pdf", help="Format when splitting PDF")
     parser.add_argument("--quality", type=int, default=85, help="Image quality (1-100)")
     parser.add_argument("--width", type=int, default=None, help="Resize width")
     parser.add_argument("--height", type=int, default=None, help="Resize height")
 
     args = parser.parse_args()
+
+    # ACTION 1: Merge to PDF
+    if args.action == "merge-pdf" or args.inputs:
+        if not args.inputs or not args.target:
+            sys.stderr.write("Error: --inputs and --target are required for merge-pdf.\n")
+            sys.exit(1)
+        input_paths = [Path(p) for p in args.inputs]
+        target_path = Path(args.target)
+        ok = merge_to_pdf(input_paths, target_path)
+        if ok:
+            print(json.dumps({"status": "success", "action": "merge-pdf", "target": str(target_path)}))
+            sys.exit(0)
+        else:
+            sys.stderr.write("Failed to merge files into PDF.\n")
+            sys.exit(2)
+
+    # ACTION 2: Split PDF
+    if args.action == "split-pdf":
+        if not args.source or not args.target:
+            sys.stderr.write("Error: --source and --target are required for split-pdf.\n")
+            sys.exit(1)
+        source_path = Path(args.source)
+        target_dir = Path(args.target)
+        ok = split_pdf(source_path, target_dir, out_format=args.split_format)
+        if ok:
+            print(json.dumps({"status": "success", "action": "split-pdf", "target_dir": str(target_dir)}))
+            sys.exit(0)
+        else:
+            sys.stderr.write(f"Failed to split PDF {source_path}.\n")
+            sys.exit(2)
+
+    # ACTION 3: Standard single conversion
+    if not args.source or not args.target:
+        sys.stderr.write("Error: --source and --target are required.\n")
+        sys.exit(1)
+
     source = Path(args.source)
     target = Path(args.target)
 
@@ -266,7 +380,6 @@ def main():
     excel_exts = {'xlsx', 'csv', 'tsv'}
 
     try:
-        # Route to proper engine
         if src_ext in image_exts and tgt_ext in image_exts | {'pdf'}:
             ok = convert_image(source, target, quality=args.quality, width=args.width, height=args.height)
         elif (src_ext in excel_exts and tgt_ext in excel_exts | {'json'}) or (src_ext == 'xlsx' and tgt_ext in ('csv', 'tsv', 'json')):

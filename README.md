@@ -15,6 +15,9 @@
 - **📁 High-Throughput Batch Processing**: Queue dozens or hundreds of files and entire directories at once. Uses parallel bounded worker channels (`System.Threading.Channels`) for non-blocking concurrent conversions.
 - **🔍 Magic-Byte Format Identification**: Inspects file header signatures (magic bytes) to detect genuine file types even if extensions are missing, scrambled, or altered.
 - **📑 Full PowerPoint Support**: Transcode `.pptx`, `.ppt`, and `.ppsx` presentations into high-fidelity vector `.pdf`, `.docx`, `.html`, or extract full slide notes and text into `.txt` and `.md`.
+- **📑 PDF Power Tools (Merge & Split)**:
+  - **Consolidated PDF Merger**: Combine mixed queues of PDFs, images (`PNG`, `JPG`, `WEBP`), and presentations (`PPTX`) into a single document with the dedicated `[ 📑 Merge to PDF ]` button.
+  - **Page Extractor / Splitter**: Break multi-page PDFs into separate page-by-page PDF documents or render pages directly into crisp images (`PNG`, `JPG`, `WEBP`) using `split-pdf` or `split-png/jpg/webp`.
 - **🔎 Searchable Format Browser**: Instant search and category chips (`[Documents & Slides]`, `[Images]`, `[Data & Sheets]`, `[Archives]`, `[Developer & Hashes]`) to find and assign output formats in seconds.
 - **⌨️ Instant Global Hotkey (`Ctrl + Alt + F`)**: Summon a minimalist floating quick-drop target from anywhere in Windows to convert files without having the main window open.
 - **🌱 Ultra-Low Memory Governor (< 1.5–25 MB)**: Integrated Win32 `SetProcessWorkingSetSize` optimizer and stream chunking automatically trims memory after batch runs and when minimized to the notification tray.
@@ -28,7 +31,7 @@
 |---|---|---|---|
 | **📄 Presentations** | `PPTX`, `PPT`, `PPSX` | `PDF`, `TXT`, `DOCX`, `HTML`, `MD` | PowerPoint Headless COM / `python-pptx` |
 | **🖼️ Images** | `PNG`, `JPG`, `WEBP`, `BMP`, `ICO`, `TIFF`, `GIF` | `PNG`, `JPG`, `WEBP`, `BMP`, `ICO`, `PDF`, `TIFF` | Pillow / Native Stream Engine |
-| **📑 Documents & Text**| `DOCX`, `PDF`, `TXT`, `MD`, `HTML` | `PDF`, `DOCX`, `TXT`, `MD`, `HTML` | `pdfplumber`, `pypdfium2`, `python-docx` |
+| **📑 Documents & Text**| `DOCX`, `PDF`, `TXT`, `MD`, `HTML` | `PDF`, `DOCX`, `TXT`, `MD`, `HTML`, `split-pdf`, `split-png`, `split-jpg`, `split-webp` | `pypdf`, `pypdfium2`, `pdfplumber`, `python-docx` |
 | **📊 Spreadsheets** | `CSV`, `XLSX`, `TSV` | `CSV`, `XLSX`, `JSON`, `HTML Table` | `openpyxl` / Native Delimiter Engine |
 | **💻 Data & Config** | `JSON`, `XML`, `YAML`, `CSV` | `JSON`, `XML`, `YAML`, `CSV`, `TXT` | Native .NET 10 System.Text.Json / LINQ to XML |
 | **📦 Archives** | `ZIP`, `TAR`, `GZ`, Folders | `ZIP`, `TAR`, `GZ`, Unpacked Folder | Native System.IO.Compression / TarFile |

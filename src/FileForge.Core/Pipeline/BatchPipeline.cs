@@ -124,6 +124,7 @@ public sealed class BatchPipeline : IBatchPipeline
                     }
                     else
                     {
+                        item.Options.TargetFormat ??= item.TargetFormat;
                         result = await converter.ConvertAsync(
                             item.SourcePath,
                             item.DestinationPath,

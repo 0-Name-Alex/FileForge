@@ -18,6 +18,7 @@ public sealed class ConversionOptions
     public string Delimiter { get; set; } = ",";
     public bool Indented { get; set; } = true;
     public bool Overwrite { get; set; } = true;
+    public string? TargetFormat { get; set; }
     public Dictionary<string, string> CustomSettings { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     public static ConversionOptions Default => new();

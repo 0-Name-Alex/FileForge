@@ -20,6 +20,10 @@ public static class FormatDetector
 
         // Documents
         ["pdf"] = new("pdf", "Portable Document Format", FileCategory.Document, "application/pdf"),
+        ["split-pdf"] = new("split-pdf", "Split PDF Pages", FileCategory.Document, "application/pdf"),
+        ["split-png"] = new("split-png", "Split PDF to PNG Pages", FileCategory.Image, "image/png"),
+        ["split-jpg"] = new("split-jpg", "Split PDF to JPG Pages", FileCategory.Image, "image/jpeg"),
+        ["split-webp"] = new("split-webp", "Split PDF to WebP Pages", FileCategory.Image, "image/webp"),
         ["docx"] = new("docx", "Microsoft Word Document", FileCategory.Document, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
         ["doc"] = new("doc", "Legacy Word Document", FileCategory.Document, "application/msword"),
         ["pptx"] = new("pptx", "PowerPoint Presentation", FileCategory.Document, "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
@@ -132,6 +136,11 @@ public static class FormatDetector
     public static IReadOnlyList<string> GetValidTargetFormats(string sourceExtension)
     {
         var ext = sourceExtension.TrimStart('.').ToLowerInvariant();
+        if (ext == "pdf")
+        {
+            return ["split-pdf", "split-png", "split-jpg", "split-webp", "docx", "txt", "html", "md"];
+        }
+
         if (ext is "pptx" or "ppt" or "ppsx")
         {
             return ["pdf", "txt", "docx", "html", "md"];

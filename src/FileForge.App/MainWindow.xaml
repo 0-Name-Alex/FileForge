@@ -271,6 +271,14 @@
                 <TextBlock Text="Cancel" Margin="6,0,0,0" FontSize="12" />
               </StackPanel>
             </Button>
+            <Button Style="{StaticResource SubtleBtn}" Command="{Binding MergeToPdfCommand}" Margin="0,0,8,0"
+                    ToolTip="Merge queue files (PDFs, Images, PPTX) into a single consolidated PDF">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xEA90;" FontFamily="{StaticResource IconFont}" FontSize="12" VerticalAlignment="Center"
+                           Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                <TextBlock Margin="6,0,0,0" FontSize="12" Text="Merge to PDF" />
+              </StackPanel>
+            </Button>
             <Button Style="{StaticResource AccentBtn}" Command="{Binding ConvertAllCommand}">
               <StackPanel Orientation="Horizontal">
                 <TextBlock Text="&#xE768;" FontFamily="{StaticResource IconFont}" FontSize="13" VerticalAlignment="Center"

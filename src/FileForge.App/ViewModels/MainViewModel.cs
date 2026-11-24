@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using FileForge.Core.Converters;
 using FileForge.Core.Interfaces;
 using FileForge.Core.Models;
 using FileForge.Core.Pipeline;
@@ -62,6 +63,7 @@ public sealed class MainViewModel : ObservableObject
             if (SetProperty(ref _isBusy, value))
             {
                 (ConvertAllCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (MergeToPdfCommand as RelayCommand)?.RaiseCanExecuteChanged();
                 (CancelCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
         }
@@ -102,6 +104,7 @@ public sealed class MainViewModel : ObservableObject
     public ICommand ClearAllCommand { get; }
     public ICommand ClearCompletedCommand { get; }
     public ICommand ConvertAllCommand { get; }
+    public ICommand MergeToPdfCommand { get; }
     public ICommand CancelCommand { get; }
     public ICommand ApplyTargetToAllCommand { get; }
     public ICommand ApplyTargetToSelectedCommand { get; }
@@ -183,6 +186,7 @@ public sealed class MainViewModel : ObservableObject
         });
 
         ConvertAllCommand = new RelayCommand(async () => await ExecuteConvertAllAsync(), () => !IsBusy && QueueItems.Count > 0);
+        MergeToPdfCommand = new RelayCommand(async () => await ExecuteMergeToPdfAsync(), () => !IsBusy && QueueItems.Count > 0);
         CancelCommand = new RelayCommand(() => _pipeline.Cancel(), () => IsBusy);
 
         ApplyTargetToAllCommand = new RelayCommand(() =>
@@ -246,6 +250,7 @@ public sealed class MainViewModel : ObservableObject
         }
         UpdateCounts();
         (ConvertAllCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (MergeToPdfCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
 
     private void ExecuteAddFiles()
@@ -319,12 +324,75 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
+    private async Task ExecuteMergeToPdfAsync()
+    {
+        if (QueueItems.Count == 0) return;
+
+        IsBusy = true;
+        Directory.CreateDirectory(OutputDirectory);
+
+        var selected = QueueItems.Where(i => i.IsSelected).ToList();
+        var itemsToMerge = selected.Count > 0 ? selected : QueueItems.ToList();
+        var filesToMerge = itemsToMerge.Select(i => i.SourcePath).Where(File.Exists).ToList();
+
+        if (filesToMerge.Count == 0)
+        {
+            IsBusy = false;
+            StatusText = "No valid files found to merge into PDF.";
+            return;
+        }
+
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        var outPdf = Path.Combine(OutputDirectory, $"Merged_Document_{timestamp}.pdf");
+
+        StatusText = $"Merging {filesToMerge.Count} files into single PDF...";
+        OverallProgress = 20;
+
+        try
+        {
+            var progress = new Progress<double>(p =>
+            {
+                OverallProgress = p;
+            });
+
+            var result = await PdfToolsConverter.MergeFilesToPdfAsync(filesToMerge, outPdf, progress);
+            if (result.Success)
+            {
+                StatusText = $"Merged {filesToMerge.Count} files into {Path.GetFileName(outPdf)} ({result.ElapsedTime.TotalSeconds:F1}s)";
+                OverallProgress = 100;
+
+                try
+                {
+                    Process.Start("explorer.exe", $"/select,\"{outPdf}\"");
+                }
+                catch { }
+            }
+            else
+            {
+                StatusText = $"PDF Merge failed: {result.ErrorMessage}";
+            }
+
+            MemoryOptimizer.TrimWorkingSet();
+            RefreshMemory();
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"PDF Merge error: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     private void UpdateCounts()
     {
         TotalItems = QueueItems.Count;
         ProcessedItems = QueueItems.Count(q => q.Status == ConversionStatus.Completed || q.Status == ConversionStatus.Failed);
         SucceededItems = QueueItems.Count(q => q.Status == ConversionStatus.Completed);
         FailedItems = QueueItems.Count(q => q.Status == ConversionStatus.Failed);
+        (ConvertAllCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (MergeToPdfCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
 
     public void RefreshMemory()

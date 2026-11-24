@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using FileForge.Core.Converters;
 using FileForge.Core.Detection;
 using FileForge.Core.Models;
 using FileForge.Core.Pipeline;
@@ -179,7 +180,58 @@ sw.Stop();
 Console.WriteLine($"\n🏁 Batch conversion finished in {sw.ElapsedMilliseconds} ms!");
 Console.WriteLine($"Results: {results.Count(r => r.Success)} Succeeded, {results.Count(r => !r.Success)} Failed.");
 
-// 4. Memory Optimization test
+// 4. Test PDF Power Tools (Merge & Split)
+Console.WriteLine("\n📑 Testing PDF Power Tools (Merge & Split):");
+
+// 4.1 Merge to single consolidated PDF
+var pdfToMerge1 = Path.Combine(outDir, "sample_image.pdf");
+var pdfToMerge2 = Path.Combine(outDir, "sample_presentation.pdf");
+var mergedPdfPath = Path.Combine(outDir, "consolidated_document.pdf");
+
+Console.WriteLine("  • Merging images, presentations, and PDFs into consolidated PDF...");
+var mergeResult = await PdfToolsConverter.MergeFilesToPdfAsync(
+    [pngPath, pdfToMerge1, pptxPath],
+    mergedPdfPath);
+
+if (mergeResult.Success && File.Exists(mergedPdfPath))
+{
+    Console.WriteLine($"    ✅ Merge Success: {new FileInfo(mergedPdfPath).Length} bytes generated in {mergeResult.ElapsedTime.TotalMilliseconds:F0} ms");
+}
+else
+{
+    Console.WriteLine($"    ❌ Merge Failed: {mergeResult.ErrorMessage}");
+}
+
+// 4.2 Split PDF into separate pages
+if (File.Exists(mergedPdfPath))
+{
+    Console.WriteLine("  • Splitting consolidated PDF into individual pages (split-pdf)...");
+    var splitItem = new ConversionItem
+    {
+        SourcePath = mergedPdfPath,
+        SourceFormat = "pdf",
+        TargetFormat = "split-pdf",
+        DestinationPath = Path.Combine(outDir, "consolidated_split_pages")
+    };
+    splitItem.Options.TargetFormat = "split-pdf";
+
+    var splitConv = registry.FindConverter("pdf", "split-pdf");
+    if (splitConv != null)
+    {
+        var splitResult = await splitConv.ConvertAsync(mergedPdfPath, splitItem.DestinationPath, splitItem.Options);
+        if (splitResult.Success && Directory.Exists(splitItem.DestinationPath))
+        {
+            var splitFiles = Directory.GetFiles(splitItem.DestinationPath);
+            Console.WriteLine($"    ✅ Split Success: {splitFiles.Length} pages extracted to {splitItem.DestinationPath}");
+        }
+        else
+        {
+            Console.WriteLine($"    ❌ Split Failed: {splitResult.ErrorMessage}");
+        }
+    }
+}
+
+// 5. Memory Optimization test
 var preTrimMemory = MemoryOptimizer.GetCurrentMemoryMb();
 Console.WriteLine($"\n🧠 Memory before trimming: {preTrimMemory:F1} MB");
 MemoryOptimizer.TrimWorkingSet();

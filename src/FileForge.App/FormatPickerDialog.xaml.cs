@@ -21,6 +21,10 @@ public partial class FormatPickerDialog : Window
     [
         // Documents & Slides
         new("pdf", "Portable Document Format", "Documents & Slides", "Docs", "Universal document format for slides, printing and documents"),
+        new("split-pdf", "Split PDF Pages (Individual PDFs)", "Documents & Slides", "Docs", "Extract every page into individual PDF files"),
+        new("split-png", "Extract PDF Pages as PNG Images", "Images", "Images", "High-resolution lossless PNG image per page"),
+        new("split-jpg", "Extract PDF Pages as JPG Images", "Images", "Images", "Compressed JPEG image per page"),
+        new("split-webp", "Extract PDF Pages as WebP Images", "Images", "Images", "Modern WebP image per page"),
         new("docx", "Microsoft Word Document", "Documents & Slides", "Docs", "Rich formatted text document"),
         new("txt", "Plain Text Document", "Documents & Slides", "Docs", "Raw unformatted text file"),
         new("md", "Markdown Document", "Documents & Slides", "Docs", "Lightweight formatted markup document"),

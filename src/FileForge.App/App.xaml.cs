@@ -21,6 +21,13 @@ public partial class App : Application
 
         _mainVm = new MainViewModel();
 
+        // Support launching with file/folder arguments (e.g., Windows Explorer context menu or Send To)
+        var initialPaths = e.Args.Where(a => !string.IsNullOrWhiteSpace(a)).ToArray();
+        if (initialPaths.Length > 0)
+        {
+            _mainVm.AddPaths(initialPaths);
+        }
+
         _mainWindow = new MainWindow { DataContext = _mainVm };
         _mainWindow.Closing += (_, args) =>
         {

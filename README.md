@@ -145,24 +145,32 @@ You can run the application immediately with:
 dotnet run --project src/FileForge.App/FileForge.App.csproj
 ```
 
-### 2️⃣ Run Verification Test Suite
-Run the automated test suite to verify format detection, batch channels, PDF merge, PDF split, and memory trimming in under 9 seconds:
+### 2️⃣ Run Automated Unit & Integration Tests
+Run the **xUnit** unit test suite across format detection, data/archive/encoding converters, and parallel batch orchestration:
+```powershell
+dotnet test FileForge.slnx -c Release
+```
+Or run the end-to-end CLI verification harness (includes Python PDF merge/split & memory trimming):
 ```powershell
 dotnet run --project src/FileForge.Cli/FileForge.Cli.csproj
 ```
 
-### 3️⃣ Compile Release Binaries
+### 3️⃣ Install on Windows (With Explorer Right-Click Integration)
+Run the per-user Windows installer (no administrator privileges required) to install into `%LOCALAPPDATA%\Programs\FileForge`, create Start Menu / Desktop shortcuts, and register **"Convert with FileForge"** in the Windows Explorer right-click & Send To menus:
+```powershell
+.\installer\install.cmd
+```
+*(An Inno Setup script is also provided at [`installer/FileForge.iss`](installer/FileForge.iss) and built automatically by GitHub Actions on release tags.)*
+
+### 4️⃣ Compile Release Binaries
 Compile the optimized, standalone Windows binary with embedded icons:
 ```powershell
 .\build.cmd
 ```
 The compiled executable is ready at **`publish\FileForge.App.exe`**.
 
-### 4️⃣ Publish to Your GitHub
-To automatically push and publish this repository to your GitHub account:
-```powershell
-.\publish_to_github.cmd
-```
+### 5️⃣ License
+Licensed under the [MIT License](LICENSE).
 
 ---
 

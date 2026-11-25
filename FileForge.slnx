@@ -5,4 +5,7 @@
     <Project Path="src/FileForge.Core/FileForge.Core.csproj" />
     <Project Path="src/FileForge.Platform.Windows/FileForge.Platform.Windows.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FileForge.Tests/FileForge.Tests.csproj" />
+  </Folder>
 </Solution>

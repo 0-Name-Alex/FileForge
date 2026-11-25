@@ -4,6 +4,7 @@ obj/
 dist/
 build/
 publish/
+publish-lite/
 *.zip
 *.user
 *.suo

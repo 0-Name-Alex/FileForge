@@ -11,7 +11,8 @@
 param(
     [switch]$SkipDesktopIcon,
     [switch]$SkipContextMenu,
-    [switch]$Rebuild
+    [switch]$Rebuild,
+    [switch]$FrameworkDependent
 )
 
 $ErrorActionPreference = 'Stop'
@@ -31,13 +32,21 @@ $PublishDir = if (Test-Path (Join-Path $RepoRoot 'publish\FileForge.App.exe')) {
     Join-Path $RepoRoot 'publish'
 }
 
-if ($Rebuild -or -not (Test-Path (Join-Path $PublishDir 'FileForge.App.exe'))) {
+$ExeCandidate = Join-Path $PublishDir 'FileForge.App.exe'
+$IsStubOnly = (Test-Path $ExeCandidate) -and ((Get-Item $ExeCandidate).Length -lt 10MB)
+
+if ($Rebuild -or -not (Test-Path $ExeCandidate) -or (-not $FrameworkDependent -and $IsStubOnly -and (Test-Path (Join-Path $RepoRoot 'src\FileForge.App\FileForge.App.csproj')))) {
     $csproj = Join-Path $RepoRoot 'src\FileForge.App\FileForge.App.csproj'
     if (-not (Test-Path $csproj)) {
         throw "Could not find FileForge.App.exe in '$PublishDir' or project at '$csproj'."
     }
-    Write-Host '[1/4] Publishing FileForge (win-x64)...' -ForegroundColor Cyan
-    dotnet publish $csproj -c Release -r win-x64 --self-contained -o $PublishDir
+    if ($FrameworkDependent) {
+        Write-Host '[1/4] Publishing FileForge (framework-dependent, requires .NET 10 Desktop Runtime)...' -ForegroundColor Cyan
+        dotnet publish $csproj -c Release -o $PublishDir
+    } else {
+        Write-Host '[1/4] Publishing FileForge (win-x64 self-contained standalone)...' -ForegroundColor Cyan
+        dotnet publish $csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o $PublishDir
+    }
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE." }
 }
 

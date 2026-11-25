@@ -162,12 +162,14 @@ Run the per-user Windows installer (no administrator privileges required) to ins
 ```
 *(An Inno Setup script is also provided at [`installer/FileForge.iss`](installer/FileForge.iss) and built automatically by GitHub Actions on release tags.)*
 
-### 4️⃣ Compile Release Binaries
-Compile the optimized, standalone Windows binary with embedded icons:
+### 4️⃣ Compile Release Binaries (Standalone vs Lite)
+Run `.\build.cmd` to test and compile a **self-contained single-file** Windows binary at **`publish\FileForge.App.exe`** (bundles .NET 10—no runtime install required on any Windows 10/11 x64 PC).
+
+If you prefer the tiny **~320 KB** framework-dependent build instead, install the .NET 10 Desktop Runtime once:
 ```powershell
-.\build.cmd
+winget install Microsoft.DotNet.DesktopRuntime.10
+dotnet publish src/FileForge.App/FileForge.App.csproj -c Release -o publish-lite
 ```
-The compiled executable is ready at **`publish\FileForge.App.exe`**.
 
 ### 5️⃣ License
 Licensed under the [MIT License](LICENSE).

@@ -33,17 +33,25 @@ jobs:
       - name: Run unit tests
         run: dotnet test FileForge.slnx -c Release --no-build --logger "trx;LogFileName=test-results.trx"
 
-      - name: Publish portable bundle & Windows installer
+      - name: Publish portable bundles (standalone + lite) & Windows installer
         if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
         shell: pwsh
         run: |
           $tag = if ($env:GITHUB_REF_NAME -match '^v') { $env:GITHUB_REF_NAME } else { 'v1.1.0' }
           $ver = $tag.TrimStart('v')
-          dotnet publish src/FileForge.App/FileForge.App.csproj -c Release -r win-x64 --self-contained -o publish
-          Copy-Item installer/install.ps1, installer/install.cmd, installer/uninstall.ps1 publish/ -Force
-          $zipName = "FileForge-$tag-win-x64.zip"
-          Compress-Archive -Path publish/* -DestinationPath $zipName -Force
 
+          # 1. Self-contained single-file (works on any Windows 10/11 x64 PC with zero prerequisites)
+          dotnet publish src/FileForge.App/FileForge.App.csproj -c Release -r win-x64 --self-contained `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+          Copy-Item installer/install.ps1, installer/install.cmd, installer/uninstall.ps1 publish/ -Force
+          Compress-Archive -Path publish/* -DestinationPath "FileForge-$tag-win-x64-standalone.zip" -Force
+
+          # 2. Tiny framework-dependent build (for PCs that already have .NET 10 Desktop Runtime)
+          dotnet publish src/FileForge.App/FileForge.App.csproj -c Release -o publish-lite
+          Copy-Item installer/install.ps1, installer/install.cmd, installer/uninstall.ps1 publish-lite/ -Force
+          Compress-Archive -Path publish-lite/* -DestinationPath "FileForge-$tag-win-x64-net10-lite.zip" -Force
+
+          # 3. Inno Setup Windows Installer (bundles self-contained publish/)
           choco install innosetup -y --no-progress
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DMyAppVersion=$ver" installer/FileForge.iss
 
@@ -53,7 +61,7 @@ jobs:
         with:
           name: FileForge-win-x64
           path: |
-            FileForge-*-win-x64.zip
+            FileForge-*-win-x64-*.zip
             dist/*.exe
 
       - name: Create GitHub Release
@@ -61,6 +69,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            FileForge-*-win-x64.zip
+            FileForge-*-win-x64-*.zip
             dist/*.exe
           generate_release_notes: true

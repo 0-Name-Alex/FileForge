@@ -3,12 +3,14 @@ using System.Windows.Input;
 using FileForge.App.ViewModels;
 using FileForge.Platform.Windows.Hotkeys;
 using FileForge.Platform.Windows.Memory;
+using FileForge.Platform.Windows.SingleInstance;
 using FileForge.Platform.Windows.Tray;
 
 namespace FileForge.App;
 
 public partial class App : Application
 {
+    private SingleInstanceService? _singleInstance;
     private MainWindow? _mainWindow;
     private QuickLauncherWindow? _quickLauncher;
     private WindowsHotkeyService? _hotkeyService;
@@ -18,6 +20,18 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // Enforce a single FileForge instance per user session; forward CLI args to the active instance.
+        _singleInstance = new SingleInstanceService("FileForge");
+        if (!_singleInstance.TryAcquire())
+        {
+            Task.Run(() => _singleInstance.SendArgsToPrimaryAsync(e.Args, TimeSpan.FromSeconds(3)))
+                .GetAwaiter()
+                .GetResult();
+            _singleInstance.Dispose();
+            Shutdown(0);
+            return;
+        }
 
         _mainVm = new MainViewModel();
 
@@ -37,6 +51,20 @@ public partial class App : Application
             MemoryOptimizer.TrimWorkingSet();
         };
         _mainWindow.Show();
+
+        // Listen for second launches and bring existing window to foreground
+        _singleInstance.StartListening(args =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ShowMainWindow();
+                var paths = args.Where(a => !string.IsNullOrWhiteSpace(a)).ToArray();
+                if (paths.Length > 0)
+                {
+                    _mainVm?.AddPaths(paths);
+                }
+            });
+        });
 
         // System tray
         _trayService = new SystemTrayService();
@@ -60,8 +88,13 @@ public partial class App : Application
     {
         if (_mainWindow is null) return;
         _mainWindow.Show();
-        _mainWindow.WindowState = WindowState.Normal;
+        if (_mainWindow.WindowState == WindowState.Minimized)
+        {
+            _mainWindow.WindowState = WindowState.Normal;
+        }
         _mainWindow.Activate();
+        _mainWindow.Topmost = true;
+        _mainWindow.Topmost = false;
     }
 
     private void ToggleQuickLauncher()
@@ -89,6 +122,7 @@ public partial class App : Application
         _hotkeyService?.Dispose();
         _trayService?.Dispose();
         _quickLauncher?.Close();
+        _singleInstance?.Dispose();
         Shutdown();
     }
 }

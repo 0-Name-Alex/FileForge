@@ -83,11 +83,12 @@
       <!-- Subtle outlined button -->
       <Style x:Key="SubtleBtn" TargetType="Button">
         <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="Padding" Value="12,6" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="Button">
-              <Border x:Name="Bd" CornerRadius="6" Padding="12,6" Background="Transparent"
+              <Border x:Name="Bd" CornerRadius="6" Padding="{TemplateBinding Padding}" Background="Transparent"
                       BorderThickness="1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}">
                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
               </Border>

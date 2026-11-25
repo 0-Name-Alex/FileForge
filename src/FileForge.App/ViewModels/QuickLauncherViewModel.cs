@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Windows.Input;
 using FileForge.Core.Models;
@@ -13,6 +12,8 @@ public sealed class QuickLauncherViewModel : ObservableObject
 {
     private readonly ConverterRegistry _registry;
     private readonly BatchPipeline _pipeline;
+    private readonly MainViewModel _mainVm;
+    private readonly Action? _openMainApp;
     private string _selectedTargetFormat = "webp";
     private string _statusMessage = "Drop files here to quickly convert";
     private bool _isConverting;
@@ -24,6 +25,8 @@ public sealed class QuickLauncherViewModel : ObservableObject
         get => _selectedTargetFormat;
         set => SetProperty(ref _selectedTargetFormat, value);
     }
+
+    public string OutputDirectory => _mainVm.OutputDirectory;
 
     public string StatusMessage
     {
@@ -38,11 +41,23 @@ public sealed class QuickLauncherViewModel : ObservableObject
     }
 
     public ICommand QuickConvertFilesCommand { get; }
+    public ICommand OpenMainAppCommand { get; }
+    public ICommand ChangeOutputFolderCommand { get; }
 
-    public QuickLauncherViewModel(ConverterRegistry registry, BatchPipeline pipeline)
+    public QuickLauncherViewModel(ConverterRegistry registry, BatchPipeline pipeline, MainViewModel mainVm, Action? openMainApp = null)
     {
         _registry = registry;
         _pipeline = pipeline;
+        _mainVm = mainVm;
+        _openMainApp = openMainApp;
+
+        _mainVm.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(MainViewModel.OutputDirectory))
+            {
+                OnPropertyChanged(nameof(OutputDirectory));
+            }
+        };
 
         QuickConvertFilesCommand = new RelayCommand(async obj =>
         {
@@ -50,6 +65,13 @@ public sealed class QuickLauncherViewModel : ObservableObject
             {
                 await ConvertQuickFilesAsync(filePaths);
             }
+        });
+
+        OpenMainAppCommand = new RelayCommand(() => _openMainApp?.Invoke());
+        ChangeOutputFolderCommand = new RelayCommand(() =>
+        {
+            if (_mainVm.ChangeOutputFolderCommand.CanExecute(null))
+                _mainVm.ChangeOutputFolderCommand.Execute(null);
         });
     }
 
@@ -61,7 +83,7 @@ public sealed class QuickLauncherViewModel : ObservableObject
         IsConverting = true;
         StatusMessage = $"Converting {files.Count} files to .{SelectedTargetFormat}...";
 
-        var outDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "FileForge_Output");
+        var outDir = _mainVm.OutputDirectory;
         Directory.CreateDirectory(outDir);
 
         var items = files.Select(f =>
@@ -79,9 +101,19 @@ public sealed class QuickLauncherViewModel : ObservableObject
 
         var results = await _pipeline.ExecuteBatchAsync(items);
         var successCount = results.Count(r => r.Success);
+        var failedCount = results.Count - successCount;
 
         IsConverting = false;
-        StatusMessage = $"Converted {successCount}/{files.Count} files to: {outDir}";
+        if (failedCount > 0)
+        {
+            var firstError = results.FirstOrDefault(r => !r.Success && !string.IsNullOrWhiteSpace(r.ErrorMessage))?.ErrorMessage
+                             ?? "Conversion failed";
+            StatusMessage = $"Failed ({failedCount}/{files.Count}): {firstError}";
+        }
+        else
+        {
+            StatusMessage = $"Converted {successCount}/{files.Count} files to: {outDir}";
+        }
 
         MemoryOptimizer.TrimWorkingSet();
     }

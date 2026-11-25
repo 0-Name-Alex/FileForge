@@ -73,7 +73,12 @@ public partial class App : Application
             return;
         }
 
-        _quickLauncher = new QuickLauncherWindow(_mainVm!);
+        _quickLauncher = new QuickLauncherWindow(_mainVm!, () =>
+        {
+            _quickLauncher?.Close();
+            _quickLauncher = null;
+            ShowMainWindow();
+        });
         _quickLauncher.Closed += (_, _) => _quickLauncher = null;
         _quickLauncher.Show();
         _quickLauncher.Activate();

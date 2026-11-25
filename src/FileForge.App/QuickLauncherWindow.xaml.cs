@@ -10,13 +10,13 @@ public partial class QuickLauncherWindow : Window
 {
     private readonly QuickLauncherViewModel _vm;
 
-    public QuickLauncherWindow(MainViewModel mainVm)
+    public QuickLauncherWindow(MainViewModel mainVm, Action? openMainApp = null)
     {
         InitializeComponent();
 
         var registry = new ConverterRegistry();
         var pipeline = new BatchPipeline(registry);
-        _vm = new QuickLauncherViewModel(registry, pipeline);
+        _vm = new QuickLauncherViewModel(registry, pipeline, mainVm, openMainApp);
         DataContext = _vm;
     }
 

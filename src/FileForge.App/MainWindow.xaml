@@ -169,6 +169,19 @@
                       </TextBlock.Text>
                     </TextBlock>
                   </WrapPanel>
+                  <TextBlock Text="{Binding ErrorMessage}" Foreground="#E5484D" FontSize="11"
+                             TextWrapping="Wrap" Margin="0,3,0,0">
+                    <TextBlock.Style>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding Status}" Value="Failed">
+                            <Setter Property="Visibility" Value="Visible" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </TextBlock.Style>
+                  </TextBlock>
                 </StackPanel>
 
                 <!-- Arrow -->
@@ -187,31 +200,30 @@
                 </StackPanel>
 
                 <!-- Status / progress -->
-                <Border Grid.Column="3" Width="100" VerticalAlignment="Center" Margin="0,0,6,0">
-                  <Grid>
-                    <!-- Progress bar (shown while processing) -->
-                    <Border CornerRadius="2" ClipToBounds="True">
-                      <ProgressBar Value="{Binding Progress}" Maximum="100" Height="4"
-                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}">
-                        <ProgressBar.Style>
-                          <Style TargetType="ProgressBar" BasedOn="{StaticResource {x:Type ProgressBar}}">
-                            <Style.Triggers>
-                              <DataTrigger Binding="{Binding Status}" Value="Queued">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                              </DataTrigger>
-                            </Style.Triggers>
-                          </Style>
-                        </ProgressBar.Style>
-                      </ProgressBar>
-                    </Border>
-                    <!-- Status text overlay -->
-                    <TextBlock x:Name="StatusLabel" Text="{Binding StatusMessage}" FontSize="11" Opacity="0.7"
+                <Border Grid.Column="3" Width="115" VerticalAlignment="Center" Margin="0,0,6,0">
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="StatusLabel" Text="{Binding StatusMessage}" FontSize="11" Opacity="0.75"
                                HorizontalAlignment="Center" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
                       <TextBlock.ToolTip>
-                        <TextBlock Text="{Binding ErrorMessage}" />
+                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" MaxWidth="360" />
                       </TextBlock.ToolTip>
                     </TextBlock>
-                  </Grid>
+                    <!-- Progress bar (shown below label ONLY while processing so it never overlaps Done/Failed) -->
+                    <Border CornerRadius="2" ClipToBounds="True" Margin="0,4,0,0">
+                      <Border.Style>
+                        <Style TargetType="Border">
+                          <Setter Property="Visibility" Value="Collapsed" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status}" Value="Processing">
+                              <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </Border.Style>
+                      <ProgressBar Value="{Binding Progress}" Maximum="100" Height="4"
+                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
+                    </Border>
+                  </StackPanel>
                 </Border>
 
                 <!-- Row actions -->
@@ -294,14 +306,18 @@
             </Button>
           </StackPanel>
 
-          <!-- Left: output path + open folder -->
+          <!-- Left: output path + change / open folder -->
           <StackPanel VerticalAlignment="Center">
             <StackPanel Orientation="Horizontal">
               <TextBlock Text="&#xED43;" FontFamily="{StaticResource IconFont}" FontSize="12"
                          VerticalAlignment="Center" Opacity="0.6" />
               <TextBlock Text="Output:" Style="{StaticResource Caption}" Margin="6,0,6,0" VerticalAlignment="Center" />
               <TextBlock Text="{Binding OutputDirectory}" FontSize="12" Opacity="0.75" VerticalAlignment="Center"
-                         TextTrimming="CharacterEllipsis" MaxWidth="400" ToolTip="{Binding OutputDirectory}" />
+                         TextTrimming="CharacterEllipsis" MaxWidth="340" ToolTip="{Binding OutputDirectory}" />
+              <Button Style="{StaticResource SubtleBtn}" Command="{Binding ChangeOutputFolderCommand}"
+                      ToolTip="Choose output folder location" Margin="8,0,0,0" Padding="8,3">
+                <TextBlock Text="Change..." FontSize="11" />
+              </Button>
               <Button Style="{StaticResource IconBtn}" Command="{Binding OpenOutputFolderCommand}" ToolTip="Open output folder" Margin="4,0,0,0">
                 <TextBlock Text="&#xE8DA;" FontFamily="{StaticResource IconFont}" FontSize="11" />
               </Button>

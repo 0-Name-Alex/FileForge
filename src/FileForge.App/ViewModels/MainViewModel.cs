@@ -110,6 +110,7 @@ public sealed class MainViewModel : ObservableObject
     public ICommand ApplyTargetToSelectedCommand { get; }
     public ICommand TrimMemoryCommand { get; }
     public ICommand OpenOutputFolderCommand { get; }
+    public ICommand ChangeOutputFolderCommand { get; }
 
     public MainViewModel()
     {
@@ -224,6 +225,8 @@ public sealed class MainViewModel : ObservableObject
             Process.Start("explorer.exe", $"\"{OutputDirectory}\"");
         });
 
+        ChangeOutputFolderCommand = new RelayCommand(ExecuteChangeOutputFolder);
+
         RefreshMemory();
     }
 
@@ -279,6 +282,28 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
+    private void ExecuteChangeOutputFolder()
+    {
+        var dlg = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Select Output Folder",
+            Multiselect = false,
+            InitialDirectory = Directory.Exists(OutputDirectory)
+                ? OutputDirectory
+                : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+        };
+        if (dlg.ShowDialog() == true && !string.IsNullOrWhiteSpace(dlg.FolderName))
+        {
+            OutputDirectory = dlg.FolderName;
+            Directory.CreateDirectory(OutputDirectory);
+            foreach (var item in QueueItems.Where(q => q.Status != ConversionStatus.Completed))
+            {
+                item.SetOutputFolder(OutputDirectory);
+            }
+            StatusText = $"Output folder changed to: {OutputDirectory}";
+        }
+    }
+
     private async Task ExecuteConvertAllAsync()
     {
         if (QueueItems.Count == 0) return;
@@ -312,7 +337,16 @@ public sealed class MainViewModel : ObservableObject
 
             var succeeded = results.Count(r => r.Success);
             var failed = results.Count(r => !r.Success);
-            StatusText = $"Batch complete in {sw.Elapsed.TotalSeconds:F1}s! Succeeded: {succeeded}, Failed: {failed}";
+            if (failed > 0)
+            {
+                var firstError = results.FirstOrDefault(r => !r.Success && !string.IsNullOrWhiteSpace(r.ErrorMessage))?.ErrorMessage
+                                 ?? "Unknown error";
+                StatusText = $"Finished in {sw.Elapsed.TotalSeconds:F1}s — {succeeded} succeeded, {failed} failed: {firstError}";
+            }
+            else
+            {
+                StatusText = $"Batch complete in {sw.Elapsed.TotalSeconds:F1}s! Succeeded: {succeeded}, Failed: {failed}";
+            }
 
             // Trim memory automatically after finishing batch
             MemoryOptimizer.TrimWorkingSet();

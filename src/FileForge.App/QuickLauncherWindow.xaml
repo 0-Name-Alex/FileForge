@@ -21,7 +21,16 @@
     <StackPanel>
       <!-- Header row -->
       <DockPanel Margin="2,0,0,10">
-        <TextBlock DockPanel.Dock="Right" Text="Esc to close" FontSize="11" Opacity="0.4" VerticalAlignment="Center" />
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button Style="{StaticResource SubtleBtn}" Command="{Binding OpenMainAppCommand}"
+                  ToolTip="Open full FileForge window" Padding="10,4" Margin="0,0,10,0">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="&#xE8A7;" FontFamily="{StaticResource IconFont}" FontSize="11" VerticalAlignment="Center" />
+              <TextBlock Text="Open Main App" FontSize="11" Margin="6,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <TextBlock Text="Esc to close" FontSize="11" Opacity="0.4" VerticalAlignment="Center" />
+        </StackPanel>
 
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
           <Image Source="assets/app_icon.png" Width="20" Height="20" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
@@ -51,16 +60,29 @@
         </StackPanel>
       </Border>
 
-      <!-- Target format row -->
+      <!-- Target format + Output folder row -->
       <DockPanel Margin="2,0,2,6">
-        <TextBlock DockPanel.Dock="Left" Text="Convert to:" FontSize="12" Opacity="0.65" VerticalAlignment="Center" Margin="0,0,8,0" />
-        <ComboBox ItemsSource="{Binding TargetFormats}"
-                  SelectedItem="{Binding SelectedTargetFormat, Mode=TwoWay}"
-                  Width="90" VerticalAlignment="Center" />
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock Text="Output:" FontSize="11" Opacity="0.55" VerticalAlignment="Center" Margin="0,0,4,0" />
+          <TextBlock Text="{Binding OutputDirectory}" FontSize="11" Opacity="0.7" VerticalAlignment="Center"
+                     MaxWidth="180" TextTrimming="CharacterEllipsis" ToolTip="{Binding OutputDirectory}" />
+          <Button Style="{StaticResource SubtleBtn}" Command="{Binding ChangeOutputFolderCommand}"
+                  ToolTip="Change output folder" Margin="6,0,0,0" Padding="7,2">
+            <TextBlock Text="Change..." FontSize="11" />
+          </Button>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock Text="Convert to:" FontSize="12" Opacity="0.65" VerticalAlignment="Center" Margin="0,0,8,0" />
+          <ComboBox ItemsSource="{Binding TargetFormats}"
+                    SelectedItem="{Binding SelectedTargetFormat, Mode=TwoWay}"
+                    Width="90" VerticalAlignment="Center" />
+        </StackPanel>
       </DockPanel>
 
-      <!-- Status -->
-      <TextBlock Text="{Binding StatusMessage}" FontSize="12" Opacity="0.55" Margin="2,0,0,4" TextTrimming="CharacterEllipsis" />
+      <!-- Status (wraps on errors so failure reasons stay readable) -->
+      <TextBlock Text="{Binding StatusMessage}" FontSize="12" Opacity="0.75" Margin="2,2,2,4"
+                 TextWrapping="Wrap" />
 
       <!-- Footer -->
       <TextBlock FontSize="11" Opacity="0.35" Margin="2,2,0,0"
